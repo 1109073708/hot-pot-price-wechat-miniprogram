@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#faf8f5",
+    "navigationBarTitleText": "火锅计价器",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#faf8f5"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

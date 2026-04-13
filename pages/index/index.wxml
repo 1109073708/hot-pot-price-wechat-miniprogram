@@ -1,0 +1,190 @@
+<view class="container">
+  <!-- 头部 -->
+  <view class="header">
+    <text class="title-main">火锅计价器</text>
+    <text class="title-sub">涮出美味 · 算清账单</text>
+  </view>
+
+  <!-- 顶部控制区 -->
+  <view class="top-controls">
+    <!-- 用餐人数 -->
+    <view class="control-row">
+      <text class="control-label">🍜 用餐人数</text>
+      <view class="diner-counter">
+        <view class="btn-diner" bindtap="changeDiners" data-delta="-1">−</view>
+        <input class="diner-input {{dinerBumping ? 'bumping' : ''}}" type="number" value="{{diners}}" placeholder="" bindinput="handleDinerInput" bindblur="handleDinerBlur" />
+        <view class="btn-diner" bindtap="changeDiners" data-delta="1">＋</view>
+        <text class="diner-unit">人</text>
+      </view>
+    </view>
+
+    <view class="ctrl-divider"></view>
+
+    <!-- 折扣选择 -->
+    <view class="control-row">
+      <view class="control-label">
+        <text>🏷️ 活动折扣</text>
+        <text class="discount-badge {{hasDiscount ? 'visible' : ''}}">{{discountLabel}}</text>
+      </view>
+      <view class="discount-wrap">
+        <picker bindchange="onDiscountChange" value="{{discountIndex}}" range="{{discountArray}}">
+          <view class="picker-content">
+            <text>{{discountArray[discountIndex]}}</text>
+            <text class="discount-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <!-- 盘子卡片网格 -->
+  <view class="plates-grid">
+    <!-- 铁盘 -->
+    <view class="plate-card iron" style="--clr: {{colors.iron}};" bindtap="addOnePlate" data-type="iron">
+      <view class="plate-icon plate-iron"></view>
+      <text class="plate-name">铁盘</text>
+      <view class="plate-price-wrap">
+        <text class="price-label">每盘</text>
+        <text class="price-orig {{hasDiscount ? 'hidden' : ''}}">¥{{prices.iron}}</text>
+        <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.iron}}</text>
+        <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.iron}}</text>
+      </view>
+      <view class="counter" catchtap="stopPropagation">
+        <view class="btn-count" catchtap="changeCount" data-type="iron" data-delta="-1">−</view>
+        <input class="count-input {{bumping.iron ? 'bumping' : ''}}" type="number" value="{{counts.iron}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="iron" />
+        <view class="btn-count btn-plus" id="btn-plus-iron" catchtap="changeCount" data-type="iron" data-delta="1">＋</view>
+      </view>
+    </view>
+
+    <!-- 红盘 -->
+    <view class="plate-card red" style="--clr: {{colors.red}};" bindtap="addOnePlate" data-type="red">
+      <view class="plate-icon plate-red"></view>
+      <text class="plate-name">红盘</text>
+      <view class="plate-price-wrap">
+        <text class="price-label">每盘</text>
+        <text class="price-orig {{hasDiscount ? 'hidden' : ''}}">¥{{prices.red}}</text>
+        <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.red}}</text>
+        <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.red}}</text>
+      </view>
+      <view class="counter" catchtap="stopPropagation">
+        <view class="btn-count" catchtap="changeCount" data-type="red" data-delta="-1">−</view>
+        <input class="count-input {{bumping.red ? 'bumping' : ''}}" type="number" value="{{counts.red}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="red" />
+        <view class="btn-count btn-plus" id="btn-plus-red" catchtap="changeCount" data-type="red" data-delta="1">＋</view>
+      </view>
+    </view>
+
+    <!-- 黄盘 -->
+    <view class="plate-card yellow" style="--clr: {{colors.yellow}};" bindtap="addOnePlate" data-type="yellow">
+      <view class="plate-icon plate-yellow"></view>
+      <text class="plate-name">黄盘</text>
+      <view class="plate-price-wrap">
+        <text class="price-label">每盘</text>
+        <text class="price-orig {{hasDiscount ? 'hidden' : ''}}">¥{{prices.yellow}}</text>
+        <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.yellow}}</text>
+        <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.yellow}}</text>
+      </view>
+      <view class="counter" catchtap="stopPropagation">
+        <view class="btn-count" catchtap="changeCount" data-type="yellow" data-delta="-1">−</view>
+        <input class="count-input {{bumping.yellow ? 'bumping' : ''}}" type="number" value="{{counts.yellow}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="yellow" />
+        <view class="btn-count btn-plus" id="btn-plus-yellow" catchtap="changeCount" data-type="yellow" data-delta="1">＋</view>
+      </view>
+    </view>
+
+    <!-- 绿盘 -->
+    <view class="plate-card green" style="--clr: {{colors.green}};" bindtap="addOnePlate" data-type="green">
+      <view class="plate-icon plate-green"></view>
+      <text class="plate-name">绿盘</text>
+      <view class="plate-price-wrap">
+        <text class="price-label">每盘</text>
+        <text class="price-orig {{hasDiscount ? 'hidden' : ''}}">¥{{prices.green}}</text>
+        <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.green}}</text>
+        <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.green}}</text>
+      </view>
+      <view class="counter" catchtap="stopPropagation">
+        <view class="btn-count" catchtap="changeCount" data-type="green" data-delta="-1">−</view>
+        <input class="count-input {{bumping.green ? 'bumping' : ''}}" type="number" value="{{counts.green}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="green" />
+        <view class="btn-count btn-plus" id="btn-plus-green" catchtap="changeCount" data-type="green" data-delta="1">＋</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账单明细 -->
+  <view class="total-section">
+    <text class="bill-title">— 账 单 明 细 —</text>
+
+    <view class="breakdown">
+      <view class="breakdown-row {{displayCounts.iron > 0 ? 'active' : ''}}">
+        <view class="breakdown-left">
+          <view class="breakdown-dot" style="background: #8888a8;"></view>
+          <text>铁盘 × {{displayCounts.iron}}</text>
+        </view>
+        <text>¥{{subtotals.iron}}</text>
+      </view>
+      <view class="breakdown-row {{displayCounts.red > 0 ? 'active' : ''}}">
+        <view class="breakdown-left">
+          <view class="breakdown-dot" style="background: #c94040;"></view>
+          <text>红盘 × {{displayCounts.red}}</text>
+        </view>
+        <text>¥{{subtotals.red}}</text>
+      </view>
+      <view class="breakdown-row {{displayCounts.yellow > 0 ? 'active' : ''}}">
+        <view class="breakdown-left">
+          <view class="breakdown-dot" style="background: #b07a20;"></view>
+          <text>黄盘 × {{displayCounts.yellow}}</text>
+        </view>
+        <text>¥{{subtotals.yellow}}</text>
+      </view>
+      <view class="breakdown-row {{displayCounts.green > 0 ? 'active' : ''}}">
+        <view class="breakdown-left">
+          <view class="breakdown-dot" style="background: #2a8a50;"></view>
+          <text>绿盘 × {{displayCounts.green}}</text>
+        </view>
+        <text>¥{{subtotals.green}}</text>
+      </view>
+    </view>
+
+    <view class="bill-sub-line"></view>
+
+    <view class="base-rows">
+      <view class="base-row">
+        <text>🍲 锅底（×{{displayDiners}}人 × ¥{{potPrice}}）</text>
+        <text>¥{{potTotal}}</text>
+      </view>
+      <view class="base-row">
+        <text>🥣 蘸料（×{{displayDiners}}人 × ¥{{saucePrice}}）</text>
+        <text>¥{{sauceTotal}}</text>
+      </view>
+    </view>
+
+    <view class="total-line"></view>
+
+    <view class="total-row">
+      <text class="total-label">合计</text>
+      <view class="total-amount">
+        <text class="unit">¥</text>
+        <text class="amount-text">{{grandTotal}}</text>
+      </view>
+    </view>
+
+    <view class="per-person-row">
+      <view class="per-person-label">👤 人均（{{displayDiners}} 人平摊）</view>
+      <view class="per-person-amount">
+        <text class="unit">¥</text>
+        <text>{{perPerson}}</text>
+      </view>
+    </view>
+
+    <text class="plate-summary">共 {{totalPlates}} 盘菜 · {{summaryDiscountLabel}}</text>
+    <view class="btn-reset" bindtap="resetAll">↺ 重新计算</view>
+  </view>
+<!-- Emoji 动画层 -->
+<view class="emoji-layer">
+  <block wx:for="{{emojiBatches}}" wx:key="batchId" wx:for-item="batch">
+    <view wx:for="{{batch.emojis}}" wx:key="index" 
+          class="emoji-item" 
+          style="left: {{item.x}}px; top: {{item.y}}px; --tx: {{item.tx}}px; --ty: {{item.ty}}px; --tx30: {{item.tx30}}px; --ty30: {{item.ty30}}px; --rot: {{item.rot}}deg; --rot30: {{item.rot30}}deg; --dur: {{item.dur}}s; animation-delay: {{item.delay}}s;">
+      {{item.emoji}}
+    </view>
+  </block>
+</view>
+</view>
