@@ -38,6 +38,7 @@ Page({
     discountIndex: 1,
     // 固定费用
     potPrice: 12,
+    potPricesByPerson: [12, 12],
     saucePrice: 4,
     // 计算结果
     discountedPrices: {
@@ -81,7 +82,15 @@ Page({
   },
 
   onLoad() {
-    this.calculateAll()
+    this.longPressDelayTimer = null
+    this.continuousAddTimer = null
+    this.pressingPlateType = ''
+    this.ignoreTapBefore = 0
+    this.continuousAddStep = 0
+
+    this.syncPotPricesWithDiners(this.getValidDiners(), () => {
+      this.calculateAll()
+    })
   },
 
   // 获取有效数量（空字符串转为0）
@@ -100,6 +109,34 @@ Page({
       return 1
     }
     return parseInt(value) || 1
+  },
+
+  // 获取有效默认锅底单价（空值或非法时回退12）
+  getValidDefaultPotPrice() {
+    const value = this.data.potPrice
+    if (value === '' || value === null || value === undefined || isNaN(value) || Number(value) < 0) {
+      return 12
+    }
+    return Number(value)
+  },
+
+  // 根据人数同步每人锅底价数组长度
+  syncPotPricesWithDiners(diners, callback) {
+    const target = Math.max(1, parseInt(diners) || 1)
+    const defaultPotPrice = this.getValidDefaultPotPrice()
+    let potPricesByPerson = [...this.data.potPricesByPerson]
+
+    if (potPricesByPerson.length < target) {
+      while (potPricesByPerson.length < target) {
+        potPricesByPerson.push(defaultPotPrice)
+      }
+    } else if (potPricesByPerson.length > target) {
+      potPricesByPerson = potPricesByPerson.slice(0, target)
+    }
+
+    this.setData({ potPricesByPerson }, () => {
+      if (callback) callback()
+    })
   },
 
   // 更新显示用的数量
@@ -207,6 +244,7 @@ Page({
     
     const validDiners = this.getValidDiners()
     this.setData({ displayDiners: validDiners })
+    const defaultPotPrice = this.getValidDefaultPotPrice()
     
     const { prices, discountValues, discountIndex } = this.data
     const discount = discountValues[discountIndex]
@@ -226,7 +264,13 @@ Page({
       totalPlates += count
     })
 
-    const potTotal = validDiners * this.data.potPrice
+    const potTotal = Array.from({ length: validDiners }, (_, index) => {
+      const value = this.data.potPricesByPerson[index]
+      if (value === '' || value === null || value === undefined || isNaN(value) || Number(value) < 0) {
+        return defaultPotPrice
+      }
+      return Number(value)
+    }).reduce((sum, p) => sum + p, 0)
     const sauceTotal = validDiners * this.data.saucePrice
 
     const grandTotal = Math.round((platesTotal + potTotal + sauceTotal) * 100) / 100
@@ -266,8 +310,10 @@ Page({
     let diners = currentValue + delta
     diners = Math.max(1, diners)
     this.setData({ diners }, () => {
-      this.calculateAll()
-      this.triggerDinerBump()
+      this.syncPotPricesWithDiners(diners, () => {
+        this.calculateAll()
+        this.triggerDinerBump()
+      })
     })
   },
 
@@ -276,15 +322,20 @@ Page({
     const value = e.detail.value
     
     if (value === '' || value === null || value === undefined) {
-      this.setData({ diners: '' })
-      this.calculateAll()
+      this.setData({ diners: '' }, () => {
+        this.syncPotPricesWithDiners(1, () => {
+          this.calculateAll()
+        })
+      })
       return
     }
     
     let v = parseInt(value)
     if (isNaN(v) || v < 1) v = 1
     this.setData({ diners: v }, () => {
-      this.calculateAll()
+      this.syncPotPricesWithDiners(v, () => {
+        this.calculateAll()
+      })
     })
   },
 
@@ -294,25 +345,161 @@ Page({
     
     if (value === '' || value === null || value === undefined || isNaN(value) || value < 1) {
       this.setData({ diners: 1 }, () => {
+        this.syncPotPricesWithDiners(1, () => {
+          this.calculateAll()
+        })
+      })
+    }
+  },
+
+  // 输入默认锅底单价
+  handlePotPriceInput(e) {
+    const value = e.detail.value
+    if (value === '' || value === null || value === undefined) {
+      this.setData({ potPrice: '' }, () => {
+        this.calculateAll()
+      })
+      return
+    }
+
+    let v = parseFloat(value)
+    if (isNaN(v) || v < 0) v = 0
+    this.setData({ potPrice: v }, () => {
+      this.calculateAll()
+    })
+  },
+
+  // 默认锅底单价失焦时回填12
+  handlePotPriceBlur() {
+    const value = this.data.potPrice
+    if (value === '' || value === null || value === undefined || isNaN(value) || Number(value) < 0) {
+      this.setData({ potPrice: 12 }, () => {
         this.calculateAll()
       })
     }
   },
 
-  // 点击整个卡片区域添加一个盘子 + Emoji
-  addOnePlate(e) {
-    const type = e.currentTarget.dataset.type
+  // 输入每人锅底单价
+  handlePotPersonInput(e) {
+    const index = parseInt(e.currentTarget.dataset.index)
+    const value = e.detail.value
+    const potPricesByPerson = [...this.data.potPricesByPerson]
+
+    if (value === '' || value === null || value === undefined) {
+      potPricesByPerson[index] = ''
+      this.setData({ potPricesByPerson }, () => {
+        this.calculateAll()
+      })
+      return
+    }
+
+    let v = parseFloat(value)
+    if (isNaN(v) || v < 0) v = 0
+    potPricesByPerson[index] = v
+
+    this.setData({ potPricesByPerson }, () => {
+      this.calculateAll()
+    })
+  },
+
+  // 每人锅底失焦时按默认单价补齐
+  handlePotPersonBlur(e) {
+    const index = parseInt(e.currentTarget.dataset.index)
+    const defaultPotPrice = this.getValidDefaultPotPrice()
+    const potPricesByPerson = [...this.data.potPricesByPerson]
+    const value = potPricesByPerson[index]
+
+    if (value === '' || value === null || value === undefined || isNaN(value) || Number(value) < 0) {
+      potPricesByPerson[index] = defaultPotPrice
+      this.setData({ potPricesByPerson }, () => {
+        this.calculateAll()
+      })
+    }
+  },
+
+  // 一键按默认锅底价应用到所有人
+  applyDefaultPotPriceToAll() {
+    const diners = this.getValidDiners()
+    const defaultPotPrice = this.getValidDefaultPotPrice()
+    const potPricesByPerson = Array.from({ length: diners }, () => defaultPotPrice)
+
+    this.setData({ potPricesByPerson }, () => {
+      this.calculateAll()
+    })
+  },
+
+  // 单次增加某一种盘子数量
+  incrementPlate(type, withBump = true, withEmoji = true) {
     let counts = { ...this.data.counts }
     const currentValue = this.getValidCount(type)
     counts[type] = currentValue + 1
-    
+
     this.setData({ counts }, () => {
       this.calculateAll()
-      this.triggerBump(type)
-      this.getPlusButtonPosition(type, (pos) => {
-        this.emojiBurst(type, pos.x, pos.y)
-      })
+      if (withBump) {
+        this.triggerBump(type)
+      }
+      if (withEmoji) {
+        this.getPlusButtonPosition(type, (pos) => {
+          this.emojiBurst(type, pos.x, pos.y)
+        })
+      }
     })
+  },
+
+  // 开始按压盘子卡片：短按单加，长按连加
+  startPlatePress(e) {
+    if (e && e.target && e.target.dataset && String(e.target.dataset.stophold) === '1') {
+      return
+    }
+
+    const type = e.currentTarget.dataset.type
+    this.stopContinuousAdd()
+    this.pressingPlateType = type
+
+    this.longPressDelayTimer = setTimeout(() => {
+      if (this.pressingPlateType !== type) return
+      this.ignoreTapBefore = Date.now() + 260
+      this.startContinuousAdd(type)
+    }, 300)
+  },
+
+  // 结束按压盘子卡片
+  endPlatePress() {
+    this.pressingPlateType = ''
+    this.stopContinuousAdd()
+  },
+
+  // 开启匀速连加
+  startContinuousAdd(type) {
+    this.stopContinuousAdd()
+    this.continuousAddStep = 0
+    this.incrementPlate(type, false, true)
+    this.continuousAddTimer = setInterval(() => {
+      this.continuousAddStep += 1
+      const shouldEmoji = this.continuousAddStep % 3 === 0
+      this.incrementPlate(type, false, shouldEmoji)
+    }, 140)
+  },
+
+  // 停止连加相关定时器
+  stopContinuousAdd() {
+    if (this.longPressDelayTimer) {
+      clearTimeout(this.longPressDelayTimer)
+      this.longPressDelayTimer = null
+    }
+    if (this.continuousAddTimer) {
+      clearInterval(this.continuousAddTimer)
+      this.continuousAddTimer = null
+    }
+  },
+
+  // 点击整个卡片区域添加一个盘子 + Emoji
+  addOnePlate(e) {
+    if (Date.now() < this.ignoreTapBefore) return
+
+    const type = e.currentTarget.dataset.type
+    this.incrementPlate(type, true, true)
   },
 
   // 点击加减按钮
@@ -395,6 +582,8 @@ Page({
         green: 0
       },
       diners: 2,
+      potPrice: 12,
+      potPricesByPerson: [12, 12],
       discountIndex: 1,
       emojiBatches: [],
       batchIdCounter: 0
@@ -405,6 +594,7 @@ Page({
 
   // 页面卸载时清理
   onUnload() {
+    this.stopContinuousAdd()
     this.setData({ emojiBatches: [] })
   }
 })

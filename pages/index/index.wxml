@@ -35,12 +35,29 @@
         </picker>
       </view>
     </view>
+
+    <view class="ctrl-divider"></view>
+
+    <!-- 默认锅底单价 -->
+    <view class="control-row">
+      <text class="control-label">🍲 默认锅底单价</text>
+      <view class="pot-default-editor">
+        <input
+          class="pot-default-input"
+          type="digit"
+          value="{{potPrice}}"
+          bindinput="handlePotPriceInput"
+          bindblur="handlePotPriceBlur"
+        />
+        <text class="pot-default-unit">元/人</text>
+      </view>
+    </view>
   </view>
 
   <!-- 盘子卡片网格 -->
   <view class="plates-grid">
     <!-- 铁盘 -->
-    <view class="plate-card iron" style="--clr: {{colors.iron}};" bindtap="addOnePlate" data-type="iron">
+    <view class="plate-card iron" style="--clr: {{colors.iron}};" bindtap="addOnePlate" bindtouchstart="startPlatePress" bindtouchend="endPlatePress" bindtouchcancel="endPlatePress" data-type="iron">
       <view class="plate-icon plate-iron"></view>
       <text class="plate-name">铁盘</text>
       <view class="plate-price-wrap">
@@ -49,15 +66,15 @@
         <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.iron}}</text>
         <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.iron}}</text>
       </view>
-      <view class="counter" catchtap="stopPropagation">
-        <view class="btn-count" catchtap="changeCount" data-type="iron" data-delta="-1">−</view>
-        <input class="count-input {{bumping.iron ? 'bumping' : ''}}" type="number" value="{{counts.iron}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="iron" />
-        <view class="btn-count btn-plus" id="btn-plus-iron" catchtap="changeCount" data-type="iron" data-delta="1">＋</view>
+      <view class="counter" catchtap="stopPropagation" data-stophold="1">
+        <view class="btn-count" catchtap="changeCount" data-stophold="1" data-type="iron" data-delta="-1">−</view>
+        <input class="count-input {{bumping.iron ? 'bumping' : ''}}" type="number" value="{{counts.iron}}" placeholder="" data-stophold="1" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="iron" />
+        <view class="btn-count btn-plus" id="btn-plus-iron" catchtap="changeCount" data-stophold="1" data-type="iron" data-delta="1">＋</view>
       </view>
     </view>
 
     <!-- 红盘 -->
-    <view class="plate-card red" style="--clr: {{colors.red}};" bindtap="addOnePlate" data-type="red">
+    <view class="plate-card red" style="--clr: {{colors.red}};" bindtap="addOnePlate" bindtouchstart="startPlatePress" bindtouchend="endPlatePress" bindtouchcancel="endPlatePress" data-type="red">
       <view class="plate-icon plate-red"></view>
       <text class="plate-name">红盘</text>
       <view class="plate-price-wrap">
@@ -66,15 +83,15 @@
         <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.red}}</text>
         <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.red}}</text>
       </view>
-      <view class="counter" catchtap="stopPropagation">
-        <view class="btn-count" catchtap="changeCount" data-type="red" data-delta="-1">−</view>
-        <input class="count-input {{bumping.red ? 'bumping' : ''}}" type="number" value="{{counts.red}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="red" />
-        <view class="btn-count btn-plus" id="btn-plus-red" catchtap="changeCount" data-type="red" data-delta="1">＋</view>
+      <view class="counter" catchtap="stopPropagation" data-stophold="1">
+        <view class="btn-count" catchtap="changeCount" data-stophold="1" data-type="red" data-delta="-1">−</view>
+        <input class="count-input {{bumping.red ? 'bumping' : ''}}" type="number" value="{{counts.red}}" placeholder="" data-stophold="1" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="red" />
+        <view class="btn-count btn-plus" id="btn-plus-red" catchtap="changeCount" data-stophold="1" data-type="red" data-delta="1">＋</view>
       </view>
     </view>
 
     <!-- 黄盘 -->
-    <view class="plate-card yellow" style="--clr: {{colors.yellow}};" bindtap="addOnePlate" data-type="yellow">
+    <view class="plate-card yellow" style="--clr: {{colors.yellow}};" bindtap="addOnePlate" bindtouchstart="startPlatePress" bindtouchend="endPlatePress" bindtouchcancel="endPlatePress" data-type="yellow">
       <view class="plate-icon plate-yellow"></view>
       <text class="plate-name">黄盘</text>
       <view class="plate-price-wrap">
@@ -83,15 +100,15 @@
         <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.yellow}}</text>
         <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.yellow}}</text>
       </view>
-      <view class="counter" catchtap="stopPropagation">
-        <view class="btn-count" catchtap="changeCount" data-type="yellow" data-delta="-1">−</view>
-        <input class="count-input {{bumping.yellow ? 'bumping' : ''}}" type="number" value="{{counts.yellow}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="yellow" />
-        <view class="btn-count btn-plus" id="btn-plus-yellow" catchtap="changeCount" data-type="yellow" data-delta="1">＋</view>
+      <view class="counter" catchtap="stopPropagation" data-stophold="1">
+        <view class="btn-count" catchtap="changeCount" data-stophold="1" data-type="yellow" data-delta="-1">−</view>
+        <input class="count-input {{bumping.yellow ? 'bumping' : ''}}" type="number" value="{{counts.yellow}}" placeholder="" data-stophold="1" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="yellow" />
+        <view class="btn-count btn-plus" id="btn-plus-yellow" catchtap="changeCount" data-stophold="1" data-type="yellow" data-delta="1">＋</view>
       </view>
     </view>
 
     <!-- 绿盘 -->
-    <view class="plate-card green" style="--clr: {{colors.green}};" bindtap="addOnePlate" data-type="green">
+    <view class="plate-card green" style="--clr: {{colors.green}};" bindtap="addOnePlate" bindtouchstart="startPlatePress" bindtouchend="endPlatePress" bindtouchcancel="endPlatePress" data-type="green">
       <view class="plate-icon plate-green"></view>
       <text class="plate-name">绿盘</text>
       <view class="plate-price-wrap">
@@ -100,10 +117,10 @@
         <text class="price-disc {{hasDiscount ? '' : 'hidden'}}">¥{{discountedPrices.green}}</text>
         <text class="price-was {{hasDiscount ? '' : 'hidden'}}">原价 ¥{{prices.green}}</text>
       </view>
-      <view class="counter" catchtap="stopPropagation">
-        <view class="btn-count" catchtap="changeCount" data-type="green" data-delta="-1">−</view>
-        <input class="count-input {{bumping.green ? 'bumping' : ''}}" type="number" value="{{counts.green}}" placeholder="" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="green" />
-        <view class="btn-count btn-plus" id="btn-plus-green" catchtap="changeCount" data-type="green" data-delta="1">＋</view>
+      <view class="counter" catchtap="stopPropagation" data-stophold="1">
+        <view class="btn-count" catchtap="changeCount" data-stophold="1" data-type="green" data-delta="-1">−</view>
+        <input class="count-input {{bumping.green ? 'bumping' : ''}}" type="number" value="{{counts.green}}" placeholder="" data-stophold="1" bindinput="handleCountInput" bindblur="handleCountBlur" data-type="green" />
+        <view class="btn-count btn-plus" id="btn-plus-green" catchtap="changeCount" data-stophold="1" data-type="green" data-delta="1">＋</view>
       </view>
     </view>
   </view>
@@ -147,8 +164,23 @@
 
     <view class="base-rows">
       <view class="base-row">
-        <text>🍲 锅底（×{{displayDiners}}人 × ¥{{potPrice}}）</text>
+        <text>🍲 锅底（可按人自定义）</text>
         <text>¥{{potTotal}}</text>
+      </view>
+      <view class="pot-person-list">
+        <view class="pot-person-item" wx:for="{{potPricesByPerson}}" wx:key="index">
+          <text class="pot-person-label">第{{index + 1}}位</text>
+          <input
+            class="pot-person-input"
+            type="digit"
+            value="{{item}}"
+            data-index="{{index}}"
+            bindinput="handlePotPersonInput"
+            bindblur="handlePotPersonBlur"
+          />
+          <text class="pot-person-unit">元</text>
+        </view>
+        <view class="btn-pot-sync" bindtap="applyDefaultPotPriceToAll">全部按默认价</view>
       </view>
       <view class="base-row">
         <text>🥣 蘸料（×{{displayDiners}}人 × ¥{{saucePrice}}）</text>
