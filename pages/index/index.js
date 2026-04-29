@@ -87,6 +87,8 @@ Page({
     this.pressingPlateType = ''
     this.ignoreTapBefore = 0
     this.continuousAddStep = 0
+    this.longPressTriggered = false
+    this.lastValidDefaultPotPrice = this.getValidDefaultPotPrice()
 
     this.syncPotPricesWithDiners(this.getValidDiners(), () => {
       this.calculateAll()
@@ -118,6 +120,19 @@ Page({
       return 12
     }
     return Number(value)
+  },
+
+  // 默认锅底价变化时，仅同步仍沿用旧默认价的人；保留手动自定义的价格
+  syncDefaultPotPrice(previousDefaultPotPrice, nextDefaultPotPrice) {
+    return this.data.potPricesByPerson.map(price => {
+      if (price === '' || price === null || price === undefined || isNaN(price) || Number(price) < 0) {
+        return nextDefaultPotPrice
+      }
+      if (Number(price) === previousDefaultPotPrice) {
+        return nextDefaultPotPrice
+      }
+      return price
+    })
   },
 
   // 根据人数同步每人锅底价数组长度
@@ -355,6 +370,8 @@ Page({
   // 输入默认锅底单价
   handlePotPriceInput(e) {
     const value = e.detail.value
+    const previousDefaultPotPrice = this.lastValidDefaultPotPrice
+
     if (value === '' || value === null || value === undefined) {
       this.setData({ potPrice: '' }, () => {
         this.calculateAll()
@@ -364,7 +381,10 @@ Page({
 
     let v = parseFloat(value)
     if (isNaN(v) || v < 0) v = 0
-    this.setData({ potPrice: v }, () => {
+    const potPricesByPerson = this.syncDefaultPotPrice(previousDefaultPotPrice, v)
+
+    this.setData({ potPrice: v, potPricesByPerson }, () => {
+      this.lastValidDefaultPotPrice = v
       this.calculateAll()
     })
   },
@@ -373,7 +393,10 @@ Page({
   handlePotPriceBlur() {
     const value = this.data.potPrice
     if (value === '' || value === null || value === undefined || isNaN(value) || Number(value) < 0) {
-      this.setData({ potPrice: 12 }, () => {
+      const potPricesByPerson = this.syncDefaultPotPrice(this.lastValidDefaultPotPrice, 12)
+
+      this.setData({ potPrice: 12, potPricesByPerson }, () => {
+        this.lastValidDefaultPotPrice = 12
         this.calculateAll()
       })
     }
@@ -456,18 +479,24 @@ Page({
     const type = e.currentTarget.dataset.type
     this.stopContinuousAdd()
     this.pressingPlateType = type
+    this.longPressTriggered = false
 
     this.longPressDelayTimer = setTimeout(() => {
       if (this.pressingPlateType !== type) return
-      this.ignoreTapBefore = Date.now() + 260
+      this.longPressTriggered = true
       this.startContinuousAdd(type)
     }, 300)
   },
 
   // 结束按压盘子卡片
   endPlatePress() {
+    const shouldIgnoreNextTap = this.longPressTriggered || !!this.continuousAddTimer
     this.pressingPlateType = ''
     this.stopContinuousAdd()
+    if (shouldIgnoreNextTap) {
+      this.ignoreTapBefore = Date.now() + 350
+    }
+    this.longPressTriggered = false
   },
 
   // 开启匀速连加
